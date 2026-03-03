@@ -1,6 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { background:#000; color:#e0aaff; font-family:sans-serif; text-align:center; padding:10px; margin:0; }
+.box { max-width:420px; margin:0 auto 15px; padding:20px; border:1px solid #7b2cbf; border-radius:15px; background:#000; }
+button { background:#000; border:1px solid #9d4edd; color:#9d4edd; padding:10px; border-radius:8px; cursor:pointer; width:100%; margin-top:5px; }
+input { width:85%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #5a189a; background:#000; color:#fff; text-align:center; }
+.purp{ color:#d699ff; font-weight:bold; }
+table{ width:100%; margin-top:10px; border-collapse:collapse; }
+td,th{ padding:8px; border-bottom:1px solid #1a1a1a; }
+</style>
+</head>
+<body>
+
+<h2>СТАВКИ НА НИКОЛАЯ</h2>
+
+<div class="box">
+<div id="authBlock">
+<input type="text" id="loginInput" placeholder="Никнейм">
+<input type="password" id="passInput" placeholder="Пароль">
+<button onclick="loginUser()">ВОЙТИ</button>
+<button onclick="registerUser()">РЕГИСТРАЦИЯ</button>
+</div>
+
+<div id="userBlock" style="display:none;">
+Игрок: <span id="username" class="purp"></span><br>
+Баланс: <span id="balance" class="purp"></span> 💰
+<button onclick="logout()">ВЫЙТИ</button>
+</div>
+</div>
+
 <script>
 const DB="https://nikolay-40916-default-rtdb.firebaseio.com/.json";
-
 let db={ users:{} };
 let currentUser=null;
 
@@ -17,50 +50,23 @@ history.replaceState({},'',"?token="+t);
 }
 
 async function loadDB(){
-try{
 const r=await fetch(DB+"?t="+Date.now());
 const data=await r.json();
-
-if(!data){
-db={ users:{} };
-await saveDB();
-}else{
-db=data;
-if(!db.users) db.users={};
-}
-
-}catch(e){
-console.log("DB load error",e);
-}
+if(data) db=data;
 }
 
 async function saveDB(){
-try{
-await fetch(DB,{
-method:"PUT",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify(db)
-});
-}catch(e){
-console.log("DB save error",e);
-}
+await fetch(DB,{method:"PUT",body:JSON.stringify(db)});
 }
 
 async function registerUser(){
 const login=document.getElementById("loginInput").value.trim();
 const pass=document.getElementById("passInput").value.trim();
-
-if(!login || !pass){
-alert("Заполни поля");
-return;
-}
+if(!login || !pass) return alert("Заполни поля");
 
 await loadDB();
 
-if(db.users[login]){
-alert("Пользователь уже существует");
-return;
-}
+if(db.users[login]) return alert("Пользователь уже существует");
 
 const token=generateToken();
 
@@ -71,6 +77,7 @@ token:token
 };
 
 await saveDB();
+
 setToken(token);
 enterAccount(login);
 }
@@ -78,28 +85,18 @@ enterAccount(login);
 async function loginUser(){
 const login=document.getElementById("loginInput").value.trim();
 const pass=document.getElementById("passInput").value.trim();
-
-if(!login || !pass){
-alert("Заполни поля");
-return;
-}
+if(!login || !pass) return alert("Заполни поля");
 
 await loadDB();
 
-if(!db.users[login]){
-alert("Нет такого пользователя");
-return;
-}
-
-if(db.users[login].pass!==pass){
-alert("Неверный пароль");
-return;
-}
+if(!db.users[login]) return alert("Нет такого пользователя");
+if(db.users[login].pass!==pass) return alert("Неверный пароль");
 
 const token=generateToken();
 db.users[login].token=token;
 
 await saveDB();
+
 setToken(token);
 enterAccount(login);
 }
@@ -130,3 +127,6 @@ enterAccount(found[0]);
 }
 };
 </script>
+
+</body>
+</html>
