@@ -1,0 +1,132 @@
+<script>
+const DB="https://nikolay-40916-default-rtdb.firebaseio.com/.json";
+
+let db={ users:{} };
+let currentUser=null;
+
+function generateToken(){
+return crypto.randomUUID();
+}
+
+function getToken(){
+return new URLSearchParams(location.search).get("token");
+}
+
+function setToken(t){
+history.replaceState({},'',"?token="+t);
+}
+
+async function loadDB(){
+try{
+const r=await fetch(DB+"?t="+Date.now());
+const data=await r.json();
+
+if(!data){
+db={ users:{} };
+await saveDB();
+}else{
+db=data;
+if(!db.users) db.users={};
+}
+
+}catch(e){
+console.log("DB load error",e);
+}
+}
+
+async function saveDB(){
+try{
+await fetch(DB,{
+method:"PUT",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify(db)
+});
+}catch(e){
+console.log("DB save error",e);
+}
+}
+
+async function registerUser(){
+const login=document.getElementById("loginInput").value.trim();
+const pass=document.getElementById("passInput").value.trim();
+
+if(!login || !pass){
+alert("Заполни поля");
+return;
+}
+
+await loadDB();
+
+if(db.users[login]){
+alert("Пользователь уже существует");
+return;
+}
+
+const token=generateToken();
+
+db.users[login]={
+pass:pass,
+balance:1000,
+token:token
+};
+
+await saveDB();
+setToken(token);
+enterAccount(login);
+}
+
+async function loginUser(){
+const login=document.getElementById("loginInput").value.trim();
+const pass=document.getElementById("passInput").value.trim();
+
+if(!login || !pass){
+alert("Заполни поля");
+return;
+}
+
+await loadDB();
+
+if(!db.users[login]){
+alert("Нет такого пользователя");
+return;
+}
+
+if(db.users[login].pass!==pass){
+alert("Неверный пароль");
+return;
+}
+
+const token=generateToken();
+db.users[login].token=token;
+
+await saveDB();
+setToken(token);
+enterAccount(login);
+}
+
+function enterAccount(login){
+currentUser=login;
+document.getElementById("authBlock").style.display="none";
+document.getElementById("userBlock").style.display="block";
+document.getElementById("username").innerText=login;
+document.getElementById("balance").innerText=db.users[login].balance;
+}
+
+function logout(){
+location.href=location.pathname;
+}
+
+window.onload=async()=>{
+await loadDB();
+
+const token=getToken();
+if(!token) return;
+
+const found=Object.entries(db.users)
+.find(([name,data])=>data.token===token);
+
+if(found){
+enterAccount(found[0]);
+}
+};
+</script>
