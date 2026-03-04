@@ -146,7 +146,7 @@
         let db = { users: {}, pool: { yes: 100, no: 100, jackpot: 500 }, chat: [], promos: {} };
         let currentUser = null;
 
-        // ВРЕМЕННЫЕ ОГРАНИЧЕНИЯ (08:20 - 16:00 МСК)
+        // время если сосла
         function isLocked() {
             const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
             const mins = now.getHours() * 60 + now.getMinutes();
@@ -175,13 +175,11 @@
                 const u = db.users[currentUser];
                 document.getElementById("balance").innerText = Math.floor(u.balance);
                 document.getElementById("mainProfileBtn").innerText = currentUser.toUpperCase();
-                
-                // Смена дня для спинов
+                //ебать пизда нахуй
                 const today = new Date().toLocaleDateString();
                 if(u.rd !== today) { u.rt = 0; u.rd = today; }
                 document.getElementById("rollsLeft").innerText = 5 - (u.rt || 0);
 
-                // Админка
                 const isSuper = currentUser.toLowerCase() === 'aqr1337';
                 if(u.adm || isSuper) {
                     document.getElementById("adminBtn").classList.remove("hidden");
@@ -198,7 +196,6 @@
             document.getElementById("chatBox").innerHTML = (db.chat || []).map(m => `<div><b style="color:var(--neon)">${m.u}:</b> ${m.t}</div>`).join('');
         }
 
-        // РУЛЕТКА (ПОЧИНЕНО)
         function startRoll() {
             const u = db.users[currentUser];
             const bet = parseInt(document.getElementById("rollInput").value);
@@ -233,7 +230,7 @@
             }, 50);
         }
 
-        // АВТОРИЗАЦИЯ И МОДАЛКИ
+        // авт и сосалки где вход
         function openAuthModal() {
             document.getElementById("authModal").classList.add("active");
             if(currentUser) {
@@ -337,4 +334,5 @@
         };
     </script>
 </body>
+
 </html>
