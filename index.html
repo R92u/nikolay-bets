@@ -1,132 +1,340 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { background:#000; color:#e0aaff; font-family:sans-serif; text-align:center; padding:10px; margin:0; }
-.box { max-width:420px; margin:0 auto 15px; padding:20px; border:1px solid #7b2cbf; border-radius:15px; background:#000; }
-button { background:#000; border:1px solid #9d4edd; color:#9d4edd; padding:10px; border-radius:8px; cursor:pointer; width:100%; margin-top:5px; }
-input { width:85%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #5a189a; background:#000; color:#fff; text-align:center; }
-.purp{ color:#d699ff; font-weight:bold; }
-table{ width:100%; margin-top:10px; border-collapse:collapse; }
-td,th{ padding:8px; border-bottom:1px solid #1a1a1a; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НИКОЛАЙ BET | LEGENDARY</title>
+    <style>
+        :root { --neon: #9d4edd; --neon-red: #ff0044; --neon-gold: #ff9e00; --neon-green: #2ecc71; --bg-grad: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }
+        body { background: var(--bg-grad); background-size: 400% 400%; animation: bgShift 15s infinite; color: #e0aaff; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; margin: 0; }
+        @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        /* КНОПКА ПРОФИЛЯ СВЕРХУ СПРАВА */
+        .profile-nav { position: absolute; top: 15px; right: 15px; z-index: 1000; }
+        .profile-btn { background: rgba(0,0,0,0.5); border: 1px solid var(--neon); color: #fff; padding: 8px 15px; border-radius: 15px; cursor: pointer; font-size: 0.8em; backdrop-filter: blur(5px); }
+
+        .box { max-width: 420px; margin: 0 auto 15px; padding: 20px; border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 20px; background: rgba(20,20,40,0.8); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .nav-btn { background: rgba(0,0,0,0.3); border: 1px solid var(--neon); color: var(--neon); padding: 10px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8em; }
+        .nav-btn.active { background: var(--neon); color: white; box-shadow: 0 0 15px var(--neon); }
+        
+        input { width: 80%; padding: 10px; margin: 8px 0; border-radius: 10px; border: 1px solid #5a189a; background: rgba(0,0,0,0.4); color: #fff; text-align: center; outline: none; }
+        button { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: var(--neon); color: #fff; }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .online { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+        .offline { background: var(--neon-red); opacity: 0.5; }
+
+        #chatBox { height: 150px; overflow-y: auto; text-align: left; font-size: 0.85em; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 10px; }
+        .jackpot-anim { animation: pulse 1s infinite; color: var(--neon-gold); font-weight: bold; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .hidden { display: none !important; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #1a1a2e; padding: 25px; border-radius: 20px; width: 280px; border: 1px solid var(--neon); text-align: center; }
+    </style>
 </head>
 <body>
 
-<h2>СТАВКИ НА НИКОЛАЯ</h2>
+    <div class="profile-nav">
+        <button id="mainProfileBtn" class="profile-btn" onclick="openAuthModal()">ВХОД</button>
+    </div>
 
-<div class="box">
-<div id="authBlock">
-<input type="text" id="loginInput" placeholder="Никнейм">
-<input type="password" id="passInput" placeholder="Пароль">
-<button onclick="loginUser()">ВОЙТИ</button>
-<button onclick="registerUser()">РЕГИСТРАЦИЯ</button>
-</div>
+    <h2 style="text-shadow: 0 0 15px var(--neon); margin-top: 40px;">НИКОЛАЙ BET <span style="font-size:0.5em; color:var(--neon-gold)">LEGEND</span></h2>
 
-<div id="userBlock" style="display:none;">
-Игрок: <span id="username" class="purp"></span><br>
-Баланс: <span id="balance" class="purp"></span> 💰
-<button onclick="logout()">ВЫЙТИ</button>
-</div>
-</div>
+    <div class="box jackpot-anim">💰 JACKPOT: <span id="jackpotAmount">0</span> 💰</div>
 
-<script>
-const DB="https://nikolay-40916-default-rtdb.firebaseio.com/.json";
-let db={ users:{} };
-let currentUser=null;
+    <button id="adminBtn" class="hidden" style="border-color: var(--neon-red); color: var(--neon-red); font-size: 0.7em; margin-bottom:10px;" onclick="toggleAdmin()">⚙️ ADM PANEL</button>
 
-function generateToken(){
-return crypto.randomUUID();
-}
+    <div id="adminBlock" class="box hidden" style="border-color: var(--neon-red)">
+        <button onclick="payout('yes')">ПРИШЕЛ</button> <button onclick="payout('no')">НЕТ</button>
+        <div id="superAdminTools" class="hidden">
+            <hr style="opacity: 0.2; margin: 15px 0;">
+            <input type="text" id="admTarget" placeholder="Ник">
+            <input type="number" id="admVal" placeholder="Сумма/Значение">
+            <div style="display: flex; gap: 4px; justify-content: center; margin-top: 10px;">
+                <button onclick="admOp('bal')" style="font-size: 0.6em;">БАЛАНС</button>
+                <button onclick="admOp('adm+')" style="font-size: 0.6em;">АДМ+</button>
+                <button onclick="openPromoModal()" style="font-size: 0.6em; border-color: var(--neon-gold); color: var(--neon-gold);">ПРОМО</button>
+            </div>
+        </div>
+    </div>
 
-function getToken(){
-return new URLSearchParams(location.search).get("token");
-}
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="authInputs">
+                <h3 id="authTitle">ВХОД</h3>
+                <input type="text" id="lIn" placeholder="Логин">
+                <input type="password" id="pIn" placeholder="Пароль">
+                <button onclick="auth('login')">ВОЙТИ</button>
+                <p onclick="auth('reg')" style="font-size: 0.7em; cursor:pointer; opacity: 0.6; margin-top: 10px;">Нет аккаунта? Регистрация</p>
+            </div>
+            <div id="profileData" class="hidden">
+                <h3 id="profName" style="color: var(--neon-gold);">ПРОФИЛЬ</h3>
+                <p>Баланс: <span id="profBal" style="color: var(--neon-green);">0</span> 💰</p>
+                <button onclick="logout()" style="border-color: var(--neon-red); color: var(--neon-red); margin-top: 10px;">ВЫЙТИ</button>
+            </div>
+            <br><button onclick="closeModal('authModal')" style="font-size: 0.6em; border: none; opacity: 0.5;">ЗАКРЫТЬ</button>
+        </div>
+    </div>
 
-function setToken(t){
-history.replaceState({},'',"?token="+t);
-}
+    <div id="promoModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: var(--neon-gold);">СОЗДАТЬ ПРОМО</h3>
+            <input type="text" id="newPromoName" placeholder="Код">
+            <input type="number" id="newPromoVal" placeholder="Сумма">
+            <input type="number" id="newPromoLimit" placeholder="Активаций">
+            <button onclick="saveNewPromo()">OK</button> <button onclick="closeModal('promoModal')">X</button>
+        </div>
+    </div>
 
-async function loadDB(){
-const r=await fetch(DB+"?t="+Date.now());
-const data=await r.json();
-if(data) db=data;
-}
+    <div id="mainNav" class="nav-tabs hidden">
+        <button class="nav-btn active" onclick="showTab('betting', this)">СТАВКИ</button>
+        <button class="nav-btn" onclick="showTab('roulette', this)">РУЛЕТКА</button>
+        <button class="nav-btn" onclick="showTab('chat', this)">ЧАТ</button>
+    </div>
 
-async function saveDB(){
-await fetch(DB,{method:"PUT",body:JSON.stringify(db)});
-}
+    <div id="tab-betting" class="tab-content">
+        <div class="box">
+            <div style="display: flex; justify-content: space-around;">
+                <div>Кэф ПРИДЕТ<br><span id="rateYes">1.00</span></div>
+                <div>Кэф НЕТ<br><span id="rateNo">1.00</span></div>
+            </div>
+            <p id="timeNotice" style="color:var(--neon-red); font-size: 0.8em; display:none; margin-top: 10px;">🚨 ЛИНИЯ ЗАКРЫТА (08:20 - 16:00)</p>
+        </div>
+        <div id="userBlock" class="box hidden">
+            <div style="margin-bottom:10px;"><span id="balance" style="font-size:1.5em; color:var(--neon-green)">0</span> 💰</div>
+            <input type="number" id="betInput" placeholder="Ставка">
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="makeBet('yes')">ПРИДЕТ</button>
+                <button onclick="makeBet('no')">НЕТ</button>
+            </div>
+        </div>
+    </div>
 
-async function registerUser(){
-const login=document.getElementById("loginInput").value.trim();
-const pass=document.getElementById("passInput").value.trim();
-if(!login || !pass) return alert("Заполни поля");
+    <div id="tab-roulette" class="tab-content hidden">
+        <div class="box">
+            <div id="rDisplay" style="font-size: 3em; font-weight: 800; margin: 10px 0; color: var(--neon-gold);">READY</div>
+            <p style="font-size: 0.8em;">Спинов сегодня: <span id="rollsLeft">0</span>/5</p>
+            <input type="number" id="rollInput" placeholder="Ставка">
+            <button id="rollBtn" onclick="startRoll()">ROLL</button>
+            <hr style="opacity: 0.1; margin: 20px 0;">
+            <input type="text" id="promoInput" placeholder="Промокод" style="width: 60%;">
+            <button onclick="usePromo()">OK</button>
+        </div>
+    </div>
 
-await loadDB();
+    <div id="tab-chat" class="tab-content hidden">
+        <div class="box">
+            <div id="chatBox"></div>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="chatMsg" placeholder="Сообщение..." style="margin:0; flex:1">
+                <button onclick="sendMsg()">></button>
+            </div>
+        </div>
+    </div>
 
-if(db.users[login]) return alert("Пользователь уже существует");
+    <div class="box">
+        <h4 style="margin:0 0 10px 0; color:var(--neon-gold)">🏆 TOP OLIGARCHS</h4>
+        <table id="leaderboard" style="width:100%; font-size:0.85em;"></table>
+    </div>
 
-const token=generateToken();
+    <script>
+        const DB = "https://nikolay-40916-default-rtdb.firebaseio.com/.json";
+        let db = { users: {}, pool: { yes: 100, no: 100, jackpot: 500 }, chat: [], promos: {} };
+        let currentUser = null;
 
-db.users[login]={
-pass:pass,
-balance:1000,
-token:token
-};
+        // ВРЕМЕННЫЕ ОГРАНИЧЕНИЯ (08:20 - 16:00 МСК)
+        function isLocked() {
+            const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
+            const mins = now.getHours() * 60 + now.getMinutes();
+            return mins >= (8*60+20) && mins < (16*60);
+        }
 
-await saveDB();
+        async function load() {
+            try {
+                const r = await fetch(DB + "?t=" + Date.now());
+                db = await r.json() || db;
+                if(currentUser && db.users[currentUser]) db.users[currentUser].ls = Date.now();
+                update();
+            } catch(e) {}
+        }
 
-setToken(token);
-enterAccount(login);
-}
+        function update() {
+            if (!db.users) db.users = {};
+            document.getElementById("jackpotAmount").innerText = Math.floor(db.pool.jackpot || 0);
+            document.getElementById("timeNotice").style.display = isLocked() ? "block" : "none";
 
-async function loginUser(){
-const login=document.getElementById("loginInput").value.trim();
-const pass=document.getElementById("passInput").value.trim();
-if(!login || !pass) return alert("Заполни поля");
+            const y = db.pool.yes || 100, n = db.pool.no || 100, total = y + n;
+            document.getElementById("rateYes").innerText = (total / y).toFixed(2);
+            document.getElementById("rateNo").innerText = (total / n).toFixed(2);
 
-await loadDB();
+            if (currentUser && db.users[currentUser]) {
+                const u = db.users[currentUser];
+                document.getElementById("balance").innerText = Math.floor(u.balance);
+                document.getElementById("mainProfileBtn").innerText = currentUser.toUpperCase();
+                
+                // Смена дня для спинов
+                const today = new Date().toLocaleDateString();
+                if(u.rd !== today) { u.rt = 0; u.rd = today; }
+                document.getElementById("rollsLeft").innerText = 5 - (u.rt || 0);
 
-if(!db.users[login]) return alert("Нет такого пользователя");
-if(db.users[login].pass!==pass) return alert("Неверный пароль");
+                // Админка
+                const isSuper = currentUser.toLowerCase() === 'aqr1337';
+                if(u.adm || isSuper) {
+                    document.getElementById("adminBtn").classList.remove("hidden");
+                    if(isSuper) document.getElementById("superAdminTools").classList.remove("hidden");
+                }
+            }
 
-const token=generateToken();
-db.users[login].token=token;
+            const sorted = Object.entries(db.users).sort((a,b) => b[1].balance - a[1].balance).slice(0, 10);
+            document.getElementById("leaderboard").innerHTML = sorted.map(([name, data]) => {
+                const isOnline = data.ls && (Date.now() - data.ls < 30000);
+                return `<tr><td style="width:20px"><span class="status-dot ${isOnline?'online':'offline'}"></span></td>
+                <td style="text-align:left">${name}</td><td style="text-align:right">${Math.floor(data.balance)} 💰</td></tr>`;
+            }).join('');
+            document.getElementById("chatBox").innerHTML = (db.chat || []).map(m => `<div><b style="color:var(--neon)">${m.u}:</b> ${m.t}</div>`).join('');
+        }
 
-await saveDB();
+        // РУЛЕТКА (ПОЧИНЕНО)
+        function startRoll() {
+            const u = db.users[currentUser];
+            const bet = parseInt(document.getElementById("rollInput").value);
+            if (!bet || bet < 10) return alert("Минималка 10!");
+            if (bet > u.balance) return alert("Не хватает!");
+            if (u.rt >= 5) return alert("Лимит 5 спинов в день!");
 
-setToken(token);
-enterAccount(login);
-}
+            u.balance -= bet;
+            u.rt++;
+            document.getElementById("rollBtn").disabled = true;
+            
+            let count = 0;
+            const anim = setInterval(() => {
+                document.getElementById("rDisplay").innerText = (Math.random() * 5).toFixed(2) + "x";
+                count++;
+                if(count > 20) {
+                    clearInterval(anim);
+                    const winChance = Math.random();
+                    let mult = 0;
+                    if(winChance > 0.95) mult = 5;
+                    else if(winChance > 0.8) mult = 2;
+                    else if(winChance > 0.5) mult = 1.2;
+                    else mult = 0;
 
-function enterAccount(login){
-currentUser=login;
-document.getElementById("authBlock").style.display="none";
-document.getElementById("userBlock").style.display="block";
-document.getElementById("username").innerText=login;
-document.getElementById("balance").innerText=db.users[login].balance;
-}
+                    const win = Math.floor(bet * mult);
+                    u.balance += win;
+                    document.getElementById("rDisplay").innerText = mult + "x";
+                    document.getElementById("rDisplay").style.color = mult > 0 ? "var(--neon-green)" : "var(--neon-red)";
+                    document.getElementById("rollBtn").disabled = false;
+                    save();
+                }
+            }, 50);
+        }
 
-function logout(){
-location.href=location.pathname;
-}
+        // АВТОРИЗАЦИЯ И МОДАЛКИ
+        function openAuthModal() {
+            document.getElementById("authModal").classList.add("active");
+            if(currentUser) {
+                document.getElementById("authInputs").classList.add("hidden");
+                document.getElementById("profileData").classList.remove("hidden");
+                document.getElementById("profName").innerText = currentUser;
+                document.getElementById("profBal").innerText = Math.floor(db.users[currentUser].balance);
+            } else {
+                document.getElementById("authInputs").classList.remove("hidden");
+                document.getElementById("profileData").classList.add("hidden");
+            }
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+        function logout() { localStorage.removeItem('nk_token'); location.reload(); }
 
-window.onload=async()=>{
-await loadDB();
+        async function auth(type) {
+            const l = document.getElementById("lIn").value.trim(), p = document.getElementById("pIn").value.trim();
+            if(!l || !p) return alert("Введи данные");
+            await load();
+            if(type === 'reg') {
+                if(db.users[l]) return alert("Ник занят");
+                db.users[l] = { pass: p, balance: 1000, token: Math.random().toString(36).substr(2), rt: 0, ls: Date.now() };
+            } else {
+                if(!db.users[l] || db.users[l].pass !== p) return alert("Неверно");
+            }
+            currentUser = l;
+            localStorage.setItem('nk_token', db.users[l].token);
+            closeModal('authModal');
+            document.getElementById("userBlock").classList.remove("hidden");
+            document.getElementById("mainNav").classList.remove("hidden");
+            save();
+        }
 
-const token=getToken();
-if(!token) return;
+        async function makeBet(t) {
+            if(isLocked()) return alert("Линия закрыта до 16:00!");
+            const a = parseInt(document.getElementById("betInput").value);
+            if(!a || a > db.users[currentUser].balance) return alert("Ошибка суммы");
+            db.users[currentUser].balance -= a;
+            db.pool[t] += a;
+            db.pool.jackpot += (a * 0.01);
+            save();
+        }
 
-const found=Object.entries(db.users)
-.find(([name,data])=>data.token===token);
+        async function usePromo() {
+            const code = document.getElementById("promoInput").value.trim();
+            const u = db.users[currentUser];
+            if(db.promos && db.promos[code]) {
+                const p = db.promos[code];
+                if(u.usedPromos?.includes(code)) return alert("Уже юзал");
+                if(p.limit <= 0) return alert("Кончились");
+                u.balance += p.val; p.limit--;
+                if(!u.usedPromos) u.usedPromos = [];
+                u.usedPromos.push(code);
+                if(p.limit <= 0) delete db.promos[code];
+                alert("Успех!"); save();
+            } else alert("Нет такого кода");
+        }
 
-if(found){
-enterAccount(found[0]);
-}
-};
-</script>
+        async function save() { 
+            if(currentUser && db.users[currentUser]) db.users[currentUser].ls = Date.now();
+            await fetch(DB, { method: "PUT", body: JSON.stringify(db) }); 
+            update(); 
+        }
 
+        async function admOp(type) {
+            const target = document.getElementById("admTarget").value.trim();
+            const val = parseInt(document.getElementById("admVal").value);
+            if(!db.users[target]) return alert("Нет такого");
+            if(type === 'bal') db.users[target].balance += val;
+            if(type === 'adm+') db.users[target].adm = true;
+            save(); alert("Done");
+        }
+
+        function showTab(t, el) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('tab-'+t).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function toggleAdmin() { document.getElementById("adminBlock").classList.toggle("hidden"); }
+        function openPromoModal() { document.getElementById("promoModal").classList.add("active"); }
+        async function saveNewPromo() {
+            const n = document.getElementById("newPromoName").value, v = parseInt(document.getElementById("newPromoVal").value), l = parseInt(document.getElementById("newPromoLimit").value);
+            if(!db.promos) db.promos = {};
+            db.promos[n] = { val: v, limit: l };
+            await save(); closeModal('promoModal');
+        }
+
+        window.onload = async () => {
+            await load();
+            const t = localStorage.getItem('nk_token');
+            if(t) {
+                const f = Object.entries(db.users).find(([n, d]) => d.token === t);
+                if(f) { 
+                    currentUser = f[0];
+                    document.getElementById("userBlock").classList.remove("hidden");
+                    document.getElementById("mainNav").classList.remove("hidden");
+                }
+            }
+            setInterval(load, 5000);
+        };
+    </script>
 </body>
 </html>
